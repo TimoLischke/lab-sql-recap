@@ -1,0 +1,6 @@
+Table,Primary Key,Key Relationships
+clients,client_id,Connected to accounts.client_id
+accounts,account_id,"Connected to clients.client_id (1-to-M), transactions.account_id, loans.account_id, credit_cards.account_id"
+transactions,transaction_id,Connected to accounts.account_id (M-to-1)
+loans,loan_id,Connected to accounts.account_id (M-to-1)
+credit_cards,card_id,Connected to accounts.account_id (M-to-1)
