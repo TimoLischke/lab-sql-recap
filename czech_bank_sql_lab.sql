@@ -7,7 +7,7 @@ SELECT DISTINCT type FROM trans;
 # 1.3 Find all accounts opened after January 1, 1996.
 SELECT account_id FROM trans WHERE date>960101;
 # 1.4 Count the total number of transactions in the `transactions` table.
-SELECT SUM(trans_id) FROM trans;
+SELECT COUNT(trans_id) FROM trans;
 # 1.5 Retrieve all loans where the amount is greater than 50,000 and sort by `loan_date` descending.
 SELECT loan_id FROM loan WHERE amount>50000 ORDER BY date DESC;
 
@@ -21,7 +21,7 @@ SELECT client_id FROM client INNER JOIN disp USING(client_id) INNER JOIN card US
 # 2.4 Retrieve all loan details along with the respective account holder information.
 SELECT * FROM loan LEFT JOIN account USING(account_id) INNER JOIN client USING(district_id);
 # 2.5 Find the total number of transactions per account, ordered by the highest number of transactions first.
-SELECT SUM(trans_id) FROM trans GROUP BY account_id ORDER BY SUM(trans_id) DESC;
+SELECT account_id, COUNT(trans_id) FROM trans GROUP BY account_id ORDER BY COUNT(trans_id) DESC;
 
 # 3. Subqueries 
 # 3.1 Find all clients who have taken loans of more than 100,000.
@@ -46,14 +46,24 @@ SELECT account_id, COUNT(trans_id) FROM trans GROUP BY account_id;
 CREATE VIEW transactions_per_account AS
 SELECT account_id, COUNT(trans_id) FROM trans GROUP BY account_id;
 # 4.2 Use a window function to show each transaction along with the running total of transactions per account.
-SELECT account_id, trans_id, amount,
-	SUM(amount) OVER (PARTITION BY account_id ORDER BY trans_date) AS running_total
+SELECT account_id, trans_id, date, amount,
+	SUM(amount) OVER (PARTITION BY account_id ORDER BY date) AS running_total
 FROM trans;
 # 4.3 Rank accounts by loan amount using `RANK()`.
-
-# 4.4 Find the oldest account per client using `ROW_NUMBER()`.
-
+SELECT account_id, trans_id, amount,
+       RANK() OVER (ORDER BY amount DESC) AS 'rank_trans' 
+FROM trans;
+SELECT account_id, loan_id, amount,
+       DENSE_RANK() OVER (ORDER BY amount DESC) AS 'dense_rank_loans' 
+FROM loan;
+# 4.4 Find the oldest (account or) transaction per client using `ROW_NUMBER()`.
+SELECT *
+FROM (SELECT client_id, trans_id, trans.date,
+             ROW_NUMBER() OVER (PARTITION BY client_id ORDER BY trans.date ASC) AS trans_order
+		FROM client INNER JOIN disp USING(client_id) INNER JOIN trans USING(account_id)) AS ot
+    WHERE trans_order = 1;
 # 4.5 Find the 3 largest transactions for each account using `DENSE_RANK()`.
-
-
+SELECT account_id, trans_id, amount,
+       DENSE_RANK() OVER (ORDER BY amount DESC) AS dense_rank_trans 
+FROM trans;
 
