@@ -64,6 +64,8 @@ FROM (SELECT client_id, trans_id, trans.date,
     WHERE trans_order = 1;
 # 4.5 Find the 3 largest transactions for each account using `DENSE_RANK()`.
 SELECT account_id, trans_id, amount,
-       DENSE_RANK() OVER (ORDER BY amount DESC) AS dense_rank_trans 
-FROM trans;
+       DENSE_RANK() OVER (PARTITION BY account_id ORDER BY amount DESC) AS dense_rank_trans 
+FROM trans 
+WHERE dense_rank_trans <= 3;
+
 
